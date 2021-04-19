@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r message = FALSE}
 library(rvest)
 library(tidyverse)
 library(lubridate)
@@ -52,10 +52,12 @@ fundamentus2 <- fundamentus1 %>%
 
 ```{r}
 fundamentus2 %>% 
-  arrange(desc(cotacao)) 
+  arrange(patrim_liq) 
 ```
 
 
+
+  
 
 ```{r}
 proventos_function <- function(papel) {
@@ -72,6 +74,9 @@ proventos_function <- function(papel) {
     html_node("table") %>% # selector 
     html_table(fill = TRUE) # get the table
 
+  
+
+  
 # Tidy dataset
   papel2 <- papel1 %>% 
     janitor::clean_names() %>% 
@@ -100,18 +105,19 @@ proventos_function <- function(papel) {
 
 ```{r}
 fundamentus2 %>% 
-  mutate(papel = as.character(papel)) %>% 
   mutate(proventos = map(papel, proventos_function))
 ```
 
 
-
-
 ```{r}
-proventos_function("EQTL3") %>% 
+proventos_function("ENBR3") %>% 
   ggplot(aes(x = data_com, y = valor_uma_acao, color = tipo, group = tipo)) +
   geom_point() +
   geom_line() +
+  scale_y_continuous(name = "Valor por 1 ação (R$)") +
+  scale_x_date() +
+  labs(x = "Data com") +
+  theme_test() +
   theme(axis.text.x = element_text(angle = 90))
 ```
 
