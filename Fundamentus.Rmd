@@ -49,15 +49,152 @@ fundamentus2 <- fundamentus1 %>%
 
 
 
+```{r}
+# ROE (Retorno sobre o patrimônio líquido)
+# ROE = Lucro liquido / Patrimônio líquido
+fundamentus2 %>%  
+  arrange(desc(`roe_%`)) %>% 
+  dplyr::select(papel, `roe_%`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+
 
 ```{r}
+# ROIC (Retorno sobre o capital investido)
+# ROIC = EBIT (lucro operacional) / Capital investido (debendures, lucro anterior etc)
+# EBIT = lucro - depreciação - amortização (+ juros + impostos)
 fundamentus2 %>% 
-  arrange(patrim_liq) 
+  arrange(desc(`roic_%`)) %>% 
+  dplyr::select(papel, `roic_%`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+
+
+```{r}
+# ML (Margem líquido)
+# ML = Lucro líquido / Receitas líquidos
+fundamentus2 %>% 
+  arrange(desc(`mrg_liq_%`)) %>% 
+  dplyr::select(papel, `mrg_liq_%`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+```{r}
+# MEBIT (Margem EBIT)
+# MEBIT = EBIT / Receita líquida
+fundamentus2 %>% 
+  arrange(desc(`mrg_ebit_%`)) %>% 
+  dplyr::select(papel, `mrg_ebit_%`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+# Indicadores de mercado
+
+```{r}
+# P/L preço sobre lucro (anos para ter de volta o retorno)
+# P/L = cotação (R$) / Lucro por ação (LPA)
+# LPA = Lucro líquido / Quantidade de ações
+# Valor ideal < 15 
+fundamentus2 %>% 
+  arrange(desc(`p_l`)) %>% 
+  dplyr::select(papel, `p_l`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+```{r}
+# P/VP preço sobre o valor patrimonial
+# P/VPA = cotação (R$) / Valor patrimonial da ação (VPA)
+# VPA = Patrimonio liquido / Quantidade de ações
+# Abaixo de 1 - descontado (Otimo para fundos imobiliarios) 
+fundamentus2 %>% 
+  arrange(desc(`p_vp`)) %>% 
+  dplyr::select(papel, `p_vp`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+
+```{r}
+# PSR - Price Sales Ratio
+# PSR = cotação (R$) / Receita liquida / qde de ações
+# Abaixo de 1 - descontado 
+fundamentus2 %>% 
+  arrange(desc(`psr`)) %>% 
+  dplyr::select(papel, `psr`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+
+
+```{r}
+# Dividend yield - % dividendo pago por ação
+# Div yield = Dividendo pago / Cotação da açaão
+fundamentus2 %>% 
+  arrange(desc(`div_yield_%`)) %>% 
+  dplyr::select(papel, `div_yield_%`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
+```
+
+```{r}
+# EV / EBITDA 
+# EV - Enterprise value - Valor total da empresa (acoes + dividas)
+# EBITDA- Lucro operacional antes de juros, impostos, amortizacao e depreciacao)
+fundamentus2 %>% 
+  arrange(desc(`ev_ebitda`)) %>% 
+  dplyr::select(papel, `ev_ebitda`) %>% 
+  filter(papel %in% c("ENBR3", "PETR4", "SULA11",
+                      "CSMG3", "CMIG4", "ENAT3",
+                      "MGLU3", "BBSE3", "BBAS3",
+                      "SAPR4", "EQTL3", "CMIN3",
+                      "VALE3", "BBDC4", "TAEE11",
+                      "B3SA3", "ITSA4", "RANI3",
+                      "MULT3"))
 ```
 
 
 
-  
 
 ```{r}
 proventos_function <- function(papel) {
@@ -110,7 +247,7 @@ fundamentus2 %>%
 
 
 ```{r}
-proventos_function("ENBR3") %>% 
+proventos_function("EMBR3") %>% 
   ggplot(aes(x = data_com, y = valor_uma_acao, color = tipo, group = tipo)) +
   geom_point() +
   geom_line() +
