@@ -1,0 +1,62 @@
+---
+title: "Greenblatt"
+author: "Maxwel Coura Oliveira"
+date: "5/5/2021"
+output: html_document
+---
+
+```{r message = FALSE}
+library(rvest)
+library(tidyverse)
+library(lubridate)
+```
+
+
+```{r}
+fundamentus <- read_html("https://www.fundamentus.com.br/resultado.php")
+```
+
+
+
+```{r}
+fundamentus1 <- fundamentus %>% 
+    html_node("table") %>% # selector = table
+    html_table(fill = TRUE) # get a table
+```
+
+
+```{r}
+fundamentus2 <- fundamentus1 %>% 
+  janitor::clean_names() %>% 
+  mutate(papel = as_factor(papel)) %>% 
+  mutate_if(is.character,
+            ~ str_replace_all(., "\\.", "")) %>% 
+  mutate_if(is_character, ~ str_replace_all(., ",", "\\.")) %>% 
+  mutate_at(c("div_yield", "mrg_liq", "roe", "cresc_rec_5a", "mrg_ebit", "roic"), 
+            ~ str_remove(., "%")) %>% 
+  rename(`div_yield_%` = div_yield,
+         `mrg_liq_%` = mrg_liq,
+         `roe_%` = roe,
+         `cresc_rec_5a_%` = cresc_rec_5a,
+         `roic_%` = roic,
+         `mrg_ebit_%` = mrg_ebit) %>% 
+  mutate_if(is_character, as.double)
+```
+
+# Carteira de Joe Greenblat
+
+```{r}
+fundamentus2 %>% 
+#  mutate(papel = as.character(papel)) %>% 
+#  mutate(papel = str_remove(papel, "([0-9]+).*$")) %>% 
+  distinct(papel, .keep_all = TRUE) %>% 
+  dplyr::select(papel, cotacao, ev_ebit, `roic_%`) %>% 
+  filter(ev_ebit > 0 & `roic_%` > 0) %>% 
+  arrange(ev_ebit) %>% 
+  mutate(nota_ev_ebit = dense_rank(desc(ev_ebit))) %>% 
+  arrange(`roic_%`) %>% 
+  mutate(nota_roic = dense_rank(`roic_%`)) %>% 
+  mutate(nota_final = nota_ev_ebit + nota_roic) %>% 
+  arrange(desc(nota_final))
+```
+
