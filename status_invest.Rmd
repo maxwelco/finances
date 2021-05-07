@@ -1,45 +1,21 @@
 ---
 title: "status_invest"
 author: "Maxwel Coura Oliveira"
-date: "5/5/2021"
+date: "5/6/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r message = FALSE}
-library(rvest)
+```{r}
 library(tidyverse)
-library(lubridate)
-```
-
-```{r}
-status_invest <- read_html("https://statusinvest.com.br/acoes/busca-avancada")
-```
-
-```{r}
-urls <- status_invest %>%
-    read_html() %>%
-    html_nodes(xpath = "//a[@href]") %>%
-    html_attr(name = "href")
-
-urls
-
 ```
 
 
 ```{r}
-status_invest %>% 
-  html_nodes("body > header") %>%       # find all links
-  html_text()
+status <- read_csv2("statusinvest-busca-avancada.csv")
 ```
 
 
 ```{r}
-status_invest1 <- status_invest %>% 
-  html_node("#list-result > div") %>%       # find all links
-  html_table(fill = TRUE)
+writexl::write_xlsx(path = "status.xlsx", x = status)
 ```
-#main-2 > div.container-full.mt-5.pb-7 > div > div.mb-3.d-flex.justify-between.align-items-center > div.d-flex > a
+
