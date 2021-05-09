@@ -1,0 +1,54 @@
+---
+title: "planilha_mira"
+author: "Maxwel Coura Oliveira"
+date: "5/9/2021"
+output: html_document
+---
+
+
+
+```{r}
+options(scipen = 999)
+library(tidyverse)
+```
+
+
+```{r}
+status <- read_csv2("statusinvest-busca-avancada.csv")
+setores <- read_csv("b3_setores.csv")
+```
+
+
+
+
+```{r}
+risco <- 16
+EPR <- 9.5 # % premio de risco de investir na bolsa
+EPR_IPCA <- 15
+```
+
+
+```{r}
+status1 <- status %>% 
+  mutate(DPA = (DY/100) * PRECO) %>% 
+  mutate(valuation_bazin = DPA / 0.06) %>% 
+  mutate(desconto_bazin = ((PRECO - valuation_bazin) / valuation_bazin)*100) %>% 
+  mutate(valuation_grahan = (22.5 * LPA * VPA)^0.5) %>% 
+  mutate(desconto_grahan = ((PRECO - valuation_grahan) / valuation_grahan)*100) %>% 
+  mutate(valuation_gordon = (DPA * (1 + (`CAGR LUCROS 5 ANOS`/100))) / risco) %>% 
+  mutate(desconto__gordon = ((PRECO - valuation_gordon) / valuation_gordon)*100) %>%   mutate(PAYOUT = DPA / LPA) %>% 
+  mutate(cescimento_esperado = (1 - PAYOUT) * ROE) %>% 
+  mutate(media_crescimento = (`CAGR LUCROS 5 ANOS` + cescimento_esperado)/2)
+```
+
+
+```{r}
+status1 %>% 
+  left_join(setores, by = "TICKER") %>% 
+  dplyr::select(TICKER, EMPRESA, PRECO, `SETOR ECONÔMICO`, SUBSETOR, SEGMENTO, 
+                PRECO, valuation_bazin, desconto_bazin, valuation_grahan, 
+                desconto_grahan, valuation_gordon, desconto__gordon,
+                cescimento_esperado, media_crescimento) %>% 
+  arrange(SEGMENTO)
+```
+
