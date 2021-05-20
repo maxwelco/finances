@@ -1,0 +1,72 @@
+---
+title: "teste"
+author: "Maxwel Coura Oliveira"
+date: "5/14/2021"
+output: html_document
+---
+
+```{r}
+fundamentus2 <- read_html("https://www.fundamentus.com.br/resultado.php") %>% 
+    html_node("table") %>% # selector = table
+    html_table(fill = TRUE) %>% # get a table
+    arrange(Papel)
+
+proventos_function <- function(papel) {
+  
+  url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=",papel,"&tipo=2")
+  
+  #papel will change by each papel code
+  
+  # Read url
+  papel <- read_html(url)
+  
+  # Extract herbicide resistance data
+  papel1 <- papel %>% 
+    html_node("table") %>% # selector 
+    html_table(fill = TRUE) # get the table
+
+  
+
+  
+# Tidy dataset
+  papel2 <- papel1 %>% 
+    janitor::clean_names() %>% 
+    as_tibble() %>% #str_replace_all(., "\\-", "NA")) %>% 
+    mutate(data_de_pagamento = if_else(
+                                       data_de_pagamento == "-", "", data_de_pagamento)) %>% 
+    mutate_if(is_character, ~ str_replace_all(., "\\/", "\\-")) %>% 
+    mutate_at("valor",
+            ~ as.double(str_replace_all(., ",", "\\."))) %>% 
+    rename(data_com = data) %>% 
+    mutate(data_com = lubridate::dmy(data_com),
+           data_de_pagamento = lubridate::dmy(data_de_pagamento),
+           tipo = as_factor(tipo),
+           data_com_mes = lubridate::month(data_com, label = TRUE),
+           ano = factor(lubridate::year(data_com)),
+           data_com_dia = lubridate::day(data_com)) %>% 
+    mutate(Tipo = str_to_title(tipo),
+           Tipo = fct_recode(Tipo,
+                             "Jrs Cap Próprio" = "Jrs Cap Proprio")) %>% 
+    mutate(Valor = valor / por_quantas_acoes) %>% 
+    dplyr::select(data_com, data_com_mes, data_com_dia, valor, Valor, everything())
+  papel2 
+}
+```
+
+```{r}
+proventos_function("VALE3") %>% 
+  ggplot(aes(x =  data_com_dia, y = Valor, fill = Tipo)) +
+ geom_bar(stat = "identity") +
+  scale_y_continuous(name = "Valor por 1 ação (R$)") +
+#  scale_x_date() +
+  labs(x = "Data com (mês)", color = "") +
+  theme_test() +
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "top")
+```
+
+
+```{r}
+proventos_function("VALE3")
+```
+

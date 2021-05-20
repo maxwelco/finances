@@ -1,0 +1,257 @@
+---
+title: "TESTE"
+author: "Maxwel Coura Oliveira"
+date: "5/16/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(rvest)
+library(RCurl)
+status_invest <- "https://statusinvest.com.br/category/advancedsearchresultexport?search=%7B%22Sector%22%3A%22%22%2C%22SubSector%22%3A%22%22%2C%22Segment%22%3A%22%22%2C%22my_range%22%3A%220%3B25%22%2C%22dy%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_L%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22peg_Ratio%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_VP%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_Ativo%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22margemBruta%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22margemEbit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22margemLiquida%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_Ebit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22eV_Ebit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22dividaLiquidaEbit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22dividaliquidaPatrimonioLiquido%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_SR%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_CapitalGiro%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_AtivoCirculante%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22roe%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22roic%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22roa%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22liquidezCorrente%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22pl_Ativo%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22passivo_Ativo%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22giroAtivos%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22receitas_Cagr5%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22lucros_Cagr5%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22liquidezMediaDiaria%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22vpa%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22lpa%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22valorMercado%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%7D&CategoryType=1"
+
+status_data <- getURL(status_invest)
+dataset <- readr::read_csv2(status_data)
+colnames(dataset)
+```
+
+
+
+
+```{r}
+library(googlesheets4)
+library(googledrive)
+```
+
+```{r}
+gs4_auth(email = "maxwelco@gmail.com")
+```
+
+
+```{r}
+empresas <- read_sheet("https://docs.google.com/spreadsheets/d/1vtts8WdUYYVqi9ygLlIuWzS_ISefoR4WDLmC2E3pXCw/edit#gid=0")
+```
+```{r}
+empresas %>% 
+  arrange(`SETOR ECONÔMICO`, SUBSETOR)
+```
+```{r}
+proventos_function("WEGE4") 
+```
+
+
+
+```{r}
+papel <- "VALE3"
+proventos_function("VALE3") %>% 
+  mutate(TICKER = papel ) %>% 
+  left_join(empresas, by = "TICKER")
+```
+
+```{r}
+proventos_function <- function(papel) {
+  
+  url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=",papel,"&tipo=2")
+  
+  #papel will change by each papel code
+  
+  # Read url
+  papel <- read_html(url)
+  
+  # Extract herbicide resistance data
+  papel1 <- papel %>% 
+    html_node("table") # selector 
+    
+    
+  if (class(papel1) == "xml_missing") {
+    return(NA)
+  }
+  
+  papel1 <- papel1 %>% 
+    html_table(fill = TRUE) # get the table
+
+  
+
+  
+# Tidy dataset
+  papel2 <- papel1 %>% 
+    janitor::clean_names() %>% 
+    as_tibble() %>% #str_replace_all(., "\\-", "NA")) %>% 
+    mutate(data_de_pagamento = if_else(
+                                       data_de_pagamento == "-", "", data_de_pagamento)) %>% 
+    mutate_if(is_character, ~ str_replace_all(., "\\/", "\\-")) %>% 
+    mutate_at("valor",
+            ~ as.double(str_replace_all(., ",", "\\."))) %>% 
+    rename(data_com = data) %>% 
+    mutate(data_com = lubridate::dmy(data_com),
+           data_de_pagamento = lubridate::dmy(data_de_pagamento),
+           tipo = as_factor(tipo),
+           data_com_mes = lubridate::month(data_com, label = TRUE),
+           data_com_ano = lubridate::year(data_com),
+           data_com_dia = lubridate::day(data_com)) %>% 
+    mutate(tipo = str_to_title(tipo),
+           tipo = fct_recode(tipo,
+                             "Jrs Cap Próprio" = "Jrs Cap Proprio")) %>% 
+    mutate(valor_uma_acao = valor / por_quantas_acoes) %>% 
+    dplyr::select(data_com, data_com_mes, data_com_dia, valor, valor_uma_acao, everything())
+  papel2 
+}
+```
+
+
+```{r}
+proventos_function("WEGE4")
+```
+
+
+
+```{r}
+url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=VALE3&tipo=2")
+  
+  #papel will change by each papel code
+  
+  # Read url
+  papel <- read_html(url)
+  
+  # Extract herbicide resistance data
+  papel1 <- papel %>% 
+    html_node("table") %>% # selector 
+    html_table(fill = TRUE) # get the table
+  
+ papel1
+```
+
+```{r}
+url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=WEGE4&tipo=2")
+  
+  #papel will change by each papel code
+  
+  # Read url
+  papel <- read_html(url)
+  
+  # Extract herbicide resistance data
+  papel1 <- papel %>% 
+    html_node("table") %>% # selector 
+    html_table(fill = TRUE) # get the table
+  
+ if (is.data.frame(papel1)) {
+ print(papel1)
+   } else {
+   NA
+ }
+```
+
+```{r}
+is.data.frame(papel1)
+```
+
+```{r}
+class(papel1)
+```
+
+
+```{r}
+if (http_error(response) ){
+    print(status_code(response))
+    stop("Something went wrong.", call. = FALSE)
+  }
+```
+
+
+
+```{r}
+if (class(papel1) == "xml_missing") {
+    stop("Sem proventos", call. = FALSE)
+  }
+```
+
+```{r}
+class(papel1) == "xml_missing"
+```
+
+
+
+
+
+
+```{r}
+# funcao de proventos - site fundamentus
+proventos_function <- function(papel) {
+
+  url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=",papel,"&tipo=2")
+
+  #papel will change by each papel code
+
+  # Read url
+  papel <- read_html(url)
+
+  # Extract herbicide resistance data
+  papel1 <- papel %>%
+    html_node("table") # selector
+
+
+# Algumas empresas não pagam dividendos
+  if (class(papel1) == "xml_missing") {
+    stop("Sem proventos!")
+  }
+
+  papel1 <- papel1 %>%
+    html_table(fill = TRUE) # get the table
+
+
+  # Tidy dataset
+  papel2 <- papel1 %>%
+    janitor::clean_names() %>%
+    as_tibble() %>% #str_replace_all(., "\\-", "NA")) %>%
+    mutate(data_de_pagamento = if_else(
+      data_de_pagamento == "-", "", data_de_pagamento)) %>%
+    mutate_if(is_character, ~ str_replace_all(., "\\/", "\\-")) %>%
+    mutate_at("valor",
+              ~ as.double(str_replace_all(., ",", "\\."))) %>%
+    rename(data_com = data) %>%
+    mutate(data_com = dmy(data_com),
+           data_de_pagamento = dmy(data_de_pagamento),
+           tipo = as_factor(tipo),
+           `Mês` = month(data_com, label = TRUE),
+           `Mês` = fct_recode(`Mês`,
+                              "Fev" = "Feb",
+                              "Abr" = "Apr",
+                              "Mai" = "May",
+                              "Ago" = "Aug",
+                              "Set" = "Sep",
+                              "Out" = "Oct",
+                              "Dez" = "Dec"),
+           Semana = week(data_com),
+           Sem_dia = wday(data_com, label = TRUE),
+           Sem_dia = fct_recode(Sem_dia,
+                                "Seg" = "Mon",
+                                "Ter" = "Tue",
+                                "Qua" = "Wed",
+                                "Qui" = "Thu",
+                                "Sex" = "Fri"),
+           Ano = factor(year(data_com)),
+           Dia = day(data_com)) %>%
+    mutate(Tipo = str_to_title(tipo),
+           Tipo = fct_recode(Tipo,
+                             "Jrs Cap Próprio" = "Jrs Cap Proprio")) %>%
+    mutate(Valor = valor / por_quantas_acoes) %>%
+    dplyr::select(data_com, `Mês`, Dia, Valor, everything())
+  papel2
+}
+```
+
+
+```{r}
+proventos_function("VALE3") %>% 
+    ggplot(aes(x = Sem_dia, y = Valor, fill = Tipo)) +
+    geom_bar(stat = "identity") +
+    scale_y_continuous(name = "Valor por 1 ação (R$)") +
+    scale_fill_viridis_d(option = "B") +
+    labs(x = "", fill = "") +
+    theme_test() +
+    theme(axis.text.x = element_text(angle = 90),
+          legend.position = "bottom")
+```
+

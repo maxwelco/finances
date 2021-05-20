@@ -1,9 +1,13 @@
 ---
-title: "Greenblatt"
+title: "valuation"
 author: "Maxwel Coura Oliveira"
-date: "5/5/2021"
+date: "5/10/2021"
 output: html_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 ```{r message = FALSE}
 library(rvest)
@@ -43,25 +47,30 @@ fundamentus2 <- fundamentus1 %>%
   mutate_if(is_character, as.double)
 ```
 
-# Carteira de Joe Greenblat
-
-```{r}
-fundamentus2 %>% 
-#  mutate(papel = as.character(papel)) %>% 
-#  mutate(papel = str_remove(papel, "([0-9]+).*$")) %>% 
-  distinct(papel, .keep_all = TRUE) %>% 
-  dplyr::select(papel, cotacao, ev_ebit, `roic_%`) %>% 
-  filter(ev_ebit > 0 & `roic_%` > 0) %>% 
-  arrange(ev_ebit) %>% 
-  mutate(nota_ev_ebit = dense_rank(desc(ev_ebit))) %>% 
-  arrange(`roic_%`) %>% 
-  mutate(nota_roic = dense_rank(`roic_%`)) %>% 
-  mutate(nota_final = nota_ev_ebit + nota_roic) %>% 
-  arrange(desc(nota_final))
-```
 
 ```{r}
 risco <- 16
 EPR <- 9.5 # % premio de risco de investir na bolsa
 EPR_IPCA <- 15
 ```
+
+
+```{r}
+fundamentus3 <- fundamentus2 %>% 
+  mutate(dpa = (`div_yield_%`/100) * cotacao) %>% 
+  mutate(valuation_bazin_RS = dpa / 0.06) %>% 
+  mutate(`desconto_bazin_%` = ((cotacao - valuation_bazin_RS) / valuation_bazin_RS)*100) %>% 
+  mutate(valuation_grahan_RS = (22.5 * LPA * VPA)^0.5) %>% 
+  mutate(`desconto_grahan_%` = ((dpa - valuation_grahan_RS) / 
+                                  valuation_grahan_RS)*100) %>% 
+  mutate(valuation_gordon_RS = (dpa * (1 + (`CAGR LUCROS 5 ANOS`/100))) / risco) %>% 
+  mutate(`desconto_gordon_%` = ((dpa - valuation_gordon_RS) / 
+                                  valuation_gordon_RS)*100) %>%      
+  mutate(payout = dpa / LPA) %>% 
+  mutate(cescimento_esperado = (1 - payout) * `roe_%`) %>% 
+  mutate(media_crescimento = (`cresc_rec_5a_%` + cescimento_esperado)/2) %>% 
+  mutate_if(is.double, ~round(., 2))
+```
+
+
+

@@ -199,6 +199,10 @@ fundamentus2 %>%
 ```{r}
 proventos_function <- function(papel) {
   
+  opt <- options(show.error.messages = FALSE)
+  on.exit(options(opt))
+  stop()
+  
   url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=",papel,"&tipo=2")
   
   #papel will change by each papel code
@@ -240,14 +244,11 @@ proventos_function <- function(papel) {
 ```
 
 
-```{r}
-fundamentus2 %>% 
-  mutate(proventos = map(papel, proventos_function))
-```
+
 
 
 ```{r}
-proventos_function("EMBR3") %>% 
+proventos_function("VALE3") %>% 
   ggplot(aes(x = data_com, y = valor_uma_acao, color = tipo, group = tipo)) +
   geom_point() +
   geom_line() +

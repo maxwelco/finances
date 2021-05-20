@@ -18,4 +18,3 @@ status <- read_csv2("statusinvest-busca-avancada.csv")
 ```{r}
 writexl::write_xlsx(path = "status.xlsx", x = status)
 ```
-

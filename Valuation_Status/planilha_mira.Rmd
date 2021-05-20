@@ -1,0 +1,132 @@
+---
+title: "planilha_mira"
+author: "Maxwel Coura Oliveira"
+date: "5/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+
+
+
+
+
+```{r}
+options(scipen = 999)
+library(tidyverse)
+```
+
+
+```{r}
+status <- read_csv2("../Valuation_Status/statusinvest-busca-avancada.csv")
+setores <- read_csv("../Valuation_Status/b3_setores.csv")
+```
+
+```{r}
+a <- status %>% 
+  distinct(TICKER, .keep_all = TRUE) %>% 
+  dplyr::select(TICKER, PRECO, `EV/EBIT`, ROIC) %>% 
+  filter(`EV/EBIT` > 0 & ROIC > 0) %>% 
+  arrange(`EV/EBIT`) %>% 
+  mutate(`NOTA EV/EBIT` = dense_rank(desc(`EV/EBIT`))) %>% 
+  arrange(ROIC) %>% 
+  mutate(`NOTA ROIC` = dense_rank(ROIC)) %>% 
+  mutate(`NOTA FINAL` = `NOTA EV/EBIT` + `NOTA ROIC`) %>% 
+  arrange(desc(`NOTA FINAL`)) %>% 
+  top_n(TICKER, n = 40) %>% 
+  mutate(TICKER = fct_reorder(TICKER, `NOTA FINAL`))
+```
+
+
+```{r}
+a %>%  ggplot(aes(x = TICKER, y = `NOTA FINAL`, fill = `NOTA FINAL`)) +
+    geom_bar(stat = "identity") +
+  scale_fill_viridis_c(option = "C") +
+    coord_flip()
+```
+
+
+
+```{r}
+risco <- 16
+EPR <- 9.5 # % premio de risco de investir na bolsa
+EPR_IPCA <- 15
+
+status1 <- status %>% 
+  mutate(DPA = (DY/100) * PRECO) %>% 
+  mutate(valuation_bazin_RS = DPA / 0.06) %>% 
+  mutate(`desconto_bazin_%` = ((PRECO - valuation_bazin_RS) / valuation_bazin_RS)*100) %>% 
+  mutate(valuation_grahan_RS = (22.5 * LPA * VPA)^0.5) %>% 
+  mutate(`desconto_grahan_%` = ((PRECO - valuation_grahan_RS) / 
+                                  valuation_grahan_RS)*100) %>% 
+  mutate(valuation_gordon_RS = (DPA * (1 + (`CAGR LUCROS 5 ANOS`/100))) / risco) %>% 
+  mutate(`desconto_gordon_%` = ((PRECO - valuation_gordon_RS) / 
+                                  valuation_gordon_RS)*100) %>%      
+  mutate(PAYOUT = DPA / LPA) %>% 
+  mutate(`CAGR LUCROS 5 ANOS` = 
+           if_else(is.na(`CAGR LUCROS 5 ANOS`), 0, `CAGR LUCROS 5 ANOS`)) %>% 
+  mutate(PAYOUT = 
+           if_else(is.na(PAYOUT), 0, PAYOUT)) %>% 
+  mutate(crescimento_esperado = (1 - PAYOUT) * ROE) %>% 
+  mutate(media_crescimento = (`CAGR LUCROS 5 ANOS` + crescimento_esperado)/2) %>% 
+  mutate_if(is.double, ~round(., 2))
+
+status2 <- status1 %>% 
+  left_join(setores, by = "TICKER") %>% 
+  dplyr::select(TICKER, EMPRESA, PRECO, `SETOR ECONÔMICO`, SUBSETOR, SEGMENTO, 
+                PRECO, valuation_bazin_RS, `desconto_bazin_%`, valuation_grahan_RS, 
+                `desconto_grahan_%`, valuation_gordon_RS, `desconto_gordon_%`,
+                `CAGR LUCROS 5 ANOS`, crescimento_esperado, media_crescimento) %>% 
+  arrange(SEGMENTO)
+```
+
+
+```{r}
+status2 %>% 
+  ggplot(aes(x = `desconto_grahan_%`, y = media_crescimento, color = TICKER)) + 
+#    scale_fill_viridis_c(option = "C") +
+    geom_point() +
+    theme_test() +
+    coord_flip() +
+    theme(legend.position = "none")
+```
+
+
+
+```{r}
+status2 %>% 
+  pivot_longer(c("desconto_grahan_%", "CAGR LUCROS 5 ANOS", "media_crescimento"),
+               names_to = "Tipo", values_to = "Value") %>% 
+  ggplot(aes(x = TICKER, y = Value, fill = Value)) + 
+    scale_fill_viridis_c(option = "C") +
+    geom_bar(stat="identity") +
+    theme_test() +
+    coord_flip() +
+    facet_grid(~ Tipo, scales = "free") +
+    theme(legend.position = "none")
+```
+
+
+```{r}
+status2 %>% 
+#  mutate(`desconto_bazin_%` = `desconto_bazin_%` * 2) %>% 
+  filter(!is.na(`desconto_bazin_%`)) %>% 
+  arrange(`desconto_bazin_%`) %>% 
+  mutate(TICKER = fct_reorder(TICKER, `desconto_bazin_%`)) 
+```
+
+
+
+
+```{r warning = FALSE}
+status2 %>% 
+  DT::datatable()
+```
+
+
+

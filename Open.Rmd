@@ -1,0 +1,123 @@
+---
+title: "Open_source"
+author: "Maxwel Coura Oliveira"
+date: "5/13/2021"
+output: html_document
+---
+
+
+
+```{r message = FALSE}
+library(rvest)
+library(tidyverse)
+library(lubridate)
+```
+
+
+```{r}
+fundamentus <- read_html("https://www.fundamentus.com.br/resultado.php")
+```
+
+
+
+```{r}
+fundamentus1 <- fundamentus %>% 
+    html_node("table") %>% # selector = table
+    html_table(fill = TRUE) # get a table
+```
+
+
+```{r}
+fundamentus2 <- fundamentus1 %>% 
+  janitor::clean_names() %>% 
+  mutate(papel = as_factor(papel)) %>% 
+  mutate_if(is.character,
+            ~ str_replace_all(., "\\.", "")) %>% 
+  mutate_if(is_character, ~ str_replace_all(., ",", "\\.")) %>% 
+  mutate_at(c("div_yield", "mrg_liq", "roe", "cresc_rec_5a", "mrg_ebit", "roic"), 
+            ~ str_remove(., "%")) %>% 
+  rename(`div_yield_%` = div_yield,
+         `mrg_liq_%` = mrg_liq,
+         `roe_%` = roe,
+         `cresc_rec_5a_%` = cresc_rec_5a,
+         `roic_%` = roic,
+         `mrg_ebit_%` = mrg_ebit) %>% 
+  mutate_if(is_character, as.double)
+```
+
+
+
+# Proventos
+
+
+
+```{r}
+proventos_function <- function(papel) {
+  
+  url <- paste0("https://www.fundamentus.com.br/proventos.php?papel=",papel,"&tipo=2")
+  
+  #papel will change by each papel code
+  
+  # Read url
+  papel <- read_html(url)
+  
+  # Extract herbicide resistance data
+  papel1 <- papel %>% 
+    html_node("table") %>% # selector 
+    html_table(fill = TRUE) # get the table
+
+  
+
+  
+# Tidy dataset
+  papel2 <- papel1 %>% 
+    janitor::clean_names() %>% 
+    as_tibble() %>% #str_replace_all(., "\\-", "NA")) %>% 
+    mutate(data_de_pagamento = if_else(
+                                       data_de_pagamento == "-", "", data_de_pagamento)) %>% 
+    mutate_if(is_character, ~ str_replace_all(., "\\/", "\\-")) %>% 
+    mutate_at("valor",
+            ~ as.double(str_replace_all(., ",", "\\."))) %>% 
+    rename(data_com = data) %>% 
+    mutate(data_com = lubridate::dmy(data_com),
+           data_de_pagamento = lubridate::dmy(data_de_pagamento),
+           tipo = as_factor(tipo),
+           data_com_mes = lubridate::month(data_com, label = TRUE),
+           data_com_ano = lubridate::year(data_com),
+           data_com_dia = lubridate::day(data_com)) %>% 
+    mutate(tipo = str_to_title(tipo),
+           tipo = fct_recode(tipo,
+                             "Jrs Cap Próprio" = "Jrs Cap Proprio")) %>% 
+    mutate(valor_uma_acao = valor / por_quantas_acoes) %>% 
+    dplyr::select(data_com, data_com_mes, data_com_dia, valor, valor_uma_acao, everything())
+  papel2 
+}
+```
+
+
+
+```{r}
+proventos_function("VALE3") %>% 
+  ggplot(aes(x = data_com, y = valor_uma_acao, color = tipo, group = tipo)) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous(name = "Valor por 1 ação (R$)") +
+  scale_x_date() +
+  labs(x = "Data com") +
+  theme_test() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+
+
+```{r}
+proventos_function("CSMG3") %>% 
+  ggplot(aes(x = factor(data_com_ano), y = valor_uma_acao, 
+             fill = tipo, group = tipo)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(name = "Valor por 1 ação (R$)") +
+  labs(x = "") +
+  theme_test() +
+  theme(axis.text.x = element_text(angle = 90))
+```
