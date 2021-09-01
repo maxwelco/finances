@@ -47,6 +47,10 @@ fundamentus2 <- fundamentus1 %>%
   mutate_if(is_character, as.double)
 ```
 
+```{r}
+fundamentus2 %>%  
+  arrange(desc(`roe_%`))
+```
 
 
 ```{r}
